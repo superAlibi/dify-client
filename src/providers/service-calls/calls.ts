@@ -59,12 +59,11 @@ export const getAppAccessToken = (appCode: string, reqOptions?: Options) => {
  * 主要是聊天初始化表单
  * 聊天时文件上传参数
  * 
- * @param appCode 
  * @param reqOptions 
  * @returns 
  */
-export const getAppRuntimeParameters = async (appCode: string, reqOptions?: Options) => {
-  return service.get(APIS.APP_PARAMETERS, { searchParams: { appCode }, ...reqOptions }).json<AppParamsResponse>()
+export const getAppRuntimeParameters = async (reqOptions?: Options) => {
+  return service.get(APIS.APP_PARAMETERS, { ...reqOptions }).json<AppParamsResponse>()
 }
 
 /**
@@ -80,8 +79,8 @@ export const getAppSiteinfo = async (options: Options) => {
  * 不知道有什么用
  * 似乎用来替换智能体的图标用的
  */
-export const getAppMeta = () => {
-  return service.get(APIS.APP_META).json<AppMetaResponse>()
+export const getAppMeta = (options: Options) => {
+  return service.get(APIS.APP_META, options).json<AppMetaResponse>()
 }
 
 

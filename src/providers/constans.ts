@@ -55,8 +55,10 @@ export const APIS = {
 
 /**
  * 请求 dify 服务器的基础地址
+ * 例如: https://api.dify.ai/v1
+ * 可以通过 setApiBase 设置
  */
-export let apibase = 'https://api.dify.ai/v1'
+export let apibase = ''
 export const setApiBase = (base: string) => {
   apibase = base
 }

@@ -23,6 +23,9 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@reactuses/core": "^6.1.0",
+    "@tanstack/react-query": "^5.90.2",
+    "immer": "^10.1.3",
     "ky": "^1.11.0",
     "react": "^19.2.0",
     "zod": "^4.1.12"
