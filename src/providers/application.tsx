@@ -10,7 +10,7 @@ import {
   AppSiteInfoResponse,
   AppMetaResponse,
   getAppMeta
-} from './service-calls'
+} from '../service-calls'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@reactuses/core'
 import { produce } from 'immer'
@@ -38,7 +38,7 @@ export interface AppTokenMap {
   [key: string]: string
 }
 
-const ApplicationContext = createContext<ApplicationConfig>({
+export const ApplicationContext = createContext<ApplicationConfig>({
   isLoadingToken: false,
   isLoading: true,
   isLoadingAccessMode: true,

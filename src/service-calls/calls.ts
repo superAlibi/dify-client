@@ -1,5 +1,5 @@
 import ky, { Options } from 'ky'
-import { apibase, APIS, setApiBase, getApis } from '../constans'
+import { apibase, APIS, setApiBase, getApis } from '../providers/constans'
 import {
   AccessModeResponse, AccessTokenResponse,
   AppMetaResponse, AppParamsResponse,
@@ -86,47 +86,6 @@ export const getAppMeta = (options: Options) => {
 
 
 
-/**
- * 语音转文字的参数
- */
-export const AudioToTextSchema = z.object({
-  file: z.file("请传入文件").max(15 * 1024 * 1024, "文件大小不能超过15MB"),
-  user: z.string('用户uuid不能为空').optional(),
-})
-
-/**
- * 将语音文件转为文字
- * @param data 
- * @param options 
- * @returns 
- */
-export const audioToText = async (data: z.infer<typeof AudioToTextSchema>, options?: Options) => {
-  const body = new FormData()
-  Object.entries(data).forEach(([k, v]) => {
-    body.append(k, v)
-  })
-  return service.post(APIS.AUDIO_TO_TEXT, { body, ...options }).json<AudioToTextResponse>()
-}
-
-
-
-
-export const textToAudioSchema = z.object({
-  text: z.string().min(1, "文本不能为空").max(5000, "文本不能超过5000字"),
-  user: z.string().optional(),
-  message_id: z.string().optional(),
-})
-
-/**
- * 文字转语音
- * @param json 
- * @param other 
- * @returns 
- */
-export const textToAudio = async (json: z.infer<typeof textToAudioSchema>, other: Options) => {
-  return service.post(APIS.TEXT_TO_AUDIO, { ...other, json }).json<{ audio_url: string }>()
-}
-
 
 export const ConversationMessagesQuerySchema = z.object({
   conversation_id: z.string("会话 ID 不能为空").min(1, "会话 ID 不能为空"),
@@ -149,7 +108,7 @@ export const getConversationMessages = (query: z.infer<typeof ConversationMessag
  * 给出会话历史列表的查询参数
  */
 export const ConversationsQuerySchema = z.object({
-  user: z.string('可选参数').optional().default('default'),
+  user: z.string('可选参数').default('default').optional(),
   limit: z.int().optional().default(20),
   pinned: z.boolean().optional(),
   sort_by: z.enum(['created_at', 'updated_at', '-created_at', '-updated_at'] as SortBy[]).optional(),
@@ -248,7 +207,7 @@ export const getConversationVariables = (query: z.infer<typeof ConversationVaria
 /**
  * 消息反馈schema
  */
-export const MessageFeedbackSchema = z.object({
+export const SendMessageFeedbackSchema = z.object({
   message_id: z.string("消息 ID 不能为空").min(1, "消息 ID 不能为空"),
   rating: z.enum(['like', 'dislike'] as const, "反馈类型不能为空"),
   user: z.string('可选参数').optional().default('default'),
@@ -260,7 +219,7 @@ export const MessageFeedbackSchema = z.object({
  * @param options 
  * @returns 
  */
-export const sendMessageFeedback = (data: z.infer<typeof MessageFeedbackSchema>, options: Options) => {
+export const sendMessageFeedback = (data: z.infer<typeof SendMessageFeedbackSchema>, options: Options) => {
   const { message_id, rating, user } = data
   return service.post(
     APIS.MESSAGE_FEEDBACK.replace('{message_id}', message_id),
@@ -290,6 +249,48 @@ export const messageFeedbacks = (params: z.infer<typeof MessageFeedbacksSchema>,
   ).json<{ data: MessageFeedBackInfo[] }>()
 }
 
+
+
+/**
+ * 语音转文字的参数
+ */
+export const AudioToTextSchema = z.object({
+  file: z.file("请传入文件").max(15 * 1024 * 1024, "文件大小不能超过15MB"),
+  user: z.string('用户uuid不能为空').optional(),
+})
+
+/**
+ * 将语音文件转为文字
+ * @param data 
+ * @param options 
+ * @returns 
+ */
+export const audioToText = async (data: z.infer<typeof AudioToTextSchema>, options?: Options) => {
+  const body = new FormData()
+  Object.entries(data).forEach(([k, v]) => {
+    body.append(k, v)
+  })
+  return service.post(APIS.AUDIO_TO_TEXT, { body, ...options }).json<AudioToTextResponse>()
+}
+
+
+
+
+export const textToAudioSchema = z.object({
+  text: z.string().min(1, "文本不能为空").max(5000, "文本不能超过5000字"),
+  user: z.string().optional(),
+  message_id: z.string().optional(),
+})
+
+/**
+ * 文字转语音
+ * @param json 
+ * @param other 
+ * @returns 
+ */
+export const textToAudio = async (json: z.infer<typeof textToAudioSchema>, other: Options) => {
+  return service.post(APIS.TEXT_TO_AUDIO, { ...other, json }).json<{ audio_url: string }>()
+}
 
 
 /**
