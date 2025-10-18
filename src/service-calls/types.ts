@@ -1,4 +1,4 @@
-export * from './app-params'
+import { UploadType } from './app-params';
 export interface AccessModeResponse {
   accessMode: AccessMode;
 }
@@ -188,62 +188,73 @@ export interface ConversationMessageMetaItem {
    * 消息 ID。
    */
   id?: string;
-  inputs?: ConversationInputs;
+  inputs?: ServerConversationFormInputs;
   message_files?: MessageFile[];
   /**
    * 用户输入/提问内容。
    */
   query?: string;
   retriever_resources?: RetrieverResource[];
-  [property: string]: any;
 }
 
 export interface Feedback {
   rating: Rating;
-  [property: string]: any;
 }
 
 export enum Rating {
-  Dislike = "dislike ",
+  Dislike = "dislike",
   Like = "like",
 }
 
 /**
  * 输入参数
  */
-export interface ConversationInputs {
+export interface PostConversationFormInputs {
   /**
    * 取自于parameters接口的userInput数组元素下variable的值
    */
-  "<variable>": boolean | number | FileInfo | string;
-  [property: string]: any;
+
+  [key: string]: boolean | number | PostFileInfo | PostFileInfo[] | string;
 }
 
+
+/**
+ * ```markdown
+ * 由于上传时确定了上传方式,所以这里不再需要all,
+ * 只需要local_file和remote_url
+ * @see {@link UploadType}
+ * @alias {@link UploadType}
+ */
+export enum TransferMethod {
+  local_file = 'local_file',
+  remote_url = 'remote_url',
+}
 /**
  * 远程文件信息
  *
  * 上传本地文件信息
  */
-export interface FileInfo {
+export interface PostFileInfo {
   /**
-   * 当值为remote_url时
+   * 
    *
    * 当值为local_file 时
    */
-  transfer_method: string;
-  type: Type;
+  transfer_method: TransferMethod;
+  type: UploadFileType;
   /**
-   * 图片地址（当传递方式为 remote_url 时）
+   * 当transfer_method值为remote_url时
+   * 图片地址
    */
   url?: string;
   /**
+   * transfer_method为local_file时使用
    * 上传文件后服务器返回的id
    */
   upload_file_id?: string;
-  [property: string]: any;
 }
 
-export enum Type {
+export enum UploadFileType {
   Audio = "audio",
   Custom = "custom",
   Document = "document",
@@ -347,6 +358,27 @@ export interface ConversationHistoryResponse {
    */
   limit: number;
 }
+export interface ServerFileInfo {
+  id: string
+  name: string
+  size: number
+  type: string
+  progress: number
+  transferMethod: TransferMethod
+  supportFileType: string
+  originalFile?: File
+  uploadedId?: string
+  base64Url?: string
+  url?: string
+  isRemote?: boolean
+}
+
+/**
+ * 从服务端返回的inputs参数类型
+ */
+export interface ServerConversationFormInputs {
+  [key: string]: number | string | boolean | ServerFileInfo | ServerFileInfo[]
+}
 
 export interface ConversationHistoryItem {
   /**
@@ -360,7 +392,7 @@ export interface ConversationHistoryItem {
   /**
    * 用户输入参数，根据parameters接口返回的userInput输入的参数,再经过后台处理过后的的参数, 所以一定和上传时候的参数不一样
    */
-  inputs?: { [key: string]: any };
+  inputs?: ServerConversationFormInputs;
   /**
    * 开场白。
    */
@@ -535,3 +567,56 @@ export interface FileUploadResponse {
   size: number;
   [property: string]: any;
 }
+
+
+
+
+
+
+
+
+/**
+ * 发送消息参数
+ */
+export interface SendMessageParams {
+  /**
+   * 会话 ID，用于继续之前的对话,不填就是创建新的会话
+   */
+  conversation_id?: string;
+  /**
+   * 输入框的文件
+   */
+  files?: PostFileInfo[];
+  /**
+   * 允许传入 App 定义的各变量值。如果变量是文件类型，请指定一个 InputFileObjectCn 对象。
+   */
+  inputs: PostConversationFormInputs;
+  /**
+   * 上次会话中某对话分支的消息id
+   */
+  parent_message_id?: string;
+  /**
+   * 用户输入/提问内容
+   */
+  query: string;
+  /**
+   * 响应模式
+   */
+  response_mode?: ResponseMode;
+  /**
+   * 用户标识，应用内唯一。，重要说明: Service API 不共享 WebApp 创建的对话。通过 API 创建的对话与 WebApp 界面中创建的对话是相互隔离的。
+   */
+  user?: string;
+}
+
+
+/**
+* 响应模式
+*/
+export enum ResponseMode {
+  Blocking = "blocking",
+  Streaming = "streaming",
+}
+
+
+

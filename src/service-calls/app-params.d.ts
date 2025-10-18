@@ -1,3 +1,15 @@
+/**
+ * 
+ * @file 
+ * 本文件实际上是./types.ts的补充,主要用于AppParams的类型定义
+ * 因为太长,所以单独分出来
+ * 
+ */
+
+
+/**
+ * app参数返回类型
+ */
 export interface AppParamsResponse {
   /**
    * 标记回复
@@ -20,7 +32,7 @@ export interface AppParamsResponse {
    */
   retriever_resource: Enable;
   /**
-   * 未知参数
+   * 是否开启铭感词审查
    */
   sensitive_word_avoidance: Enable;
   /**
@@ -131,6 +143,7 @@ export enum AllowedFileType {
  * 上传方式
  */
 export enum UploadType {
+  all = 'all',
   LocalFile = "local_file",
   Remoteurl = "remote_url",
 }

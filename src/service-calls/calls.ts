@@ -1,5 +1,6 @@
-import ky, { Options } from 'ky'
-import { apibase, APIS, setApiBase, getApis } from '../providers/constans'
+import { Options } from 'ky'
+import { fetchEventSource, FetchEventSourceInit } from '@microsoft/fetch-event-source'
+import { APIS } from '../constans'
 import {
   AccessModeResponse, AccessTokenResponse,
   AppMetaResponse, AppParamsResponse,
@@ -10,19 +11,12 @@ import {
   ConversationVariableResponse,
   SortBy,
   MessageFeedBackInfo,
-  FileUploadResponse
+  FileUploadResponse,
+  SendMessageParams
 } from './types'
 import z from 'zod'
+import { service } from '../tools/http'
 
-export const service = ky.create({
-  prefixUrl: apibase,
-  timeout: 60000,
-  hooks: {
-    beforeRequest: [],  // 写Authorization
-    beforeError: [], // 401 重新请求 access token 
-
-  }
-})
 
 
 /**
@@ -89,9 +83,9 @@ export const getAppMeta = (options: Options) => {
 
 export const ConversationMessagesQuerySchema = z.object({
   conversation_id: z.string("会话 ID 不能为空").min(1, "会话 ID 不能为空"),
-  user: z.string('可选参数').optional().default('default'),
+  user: z.string('可选参数').default('default').optional(),
   first_id: z.string().optional(),
-  limit: z.number().optional().default(20),
+  limit: z.number().default(20).optional(),
 })
 
 
@@ -335,3 +329,28 @@ export const previewFile = (params: z.infer<typeof filePreviewSchema>, options?:
   const { file_id, as_attachment } = params
   return service.get<ArrayBuffer>(APIS.FILE_PREVIEW.replace('{file_id}', file_id), { searchParams: { as_attachment }, ...options })
 }
+
+
+interface SendMessageOptions extends Omit<FetchEventSourceInit, 'fetch' | 'method' | 'body'> {
+  json: SendMessageParams
+  searchParams: Options['searchParams']
+}
+
+export const sendMessage = async (options?: SendMessageOptions) => {
+  const { ...ops } = options || {}
+  return fetchEventSource(APIS.MESSAGE_POST, {
+    ...ops,
+    method: 'POST',
+    fetch: service.create({
+      timeout: false,
+      hooks: {
+        beforeRequest: [(req, options) => {
+          console.log(req.body, options);
+          return
+        }]
+      }
+    })
+  })
+}
+
+

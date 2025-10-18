@@ -14,6 +14,25 @@ import {
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@reactuses/core'
 import { produce } from 'immer'
+import mitt, { Emitter, EventType } from 'mitt'
+
+export interface AppEvents extends Record<EventType, any> {
+  'app-access-mode-loaded': AccessModeResponse
+  'app-token-loaded': string
+  'app-params-loaded': AppParamsResponse
+  'app-siteinfo-loaded': AppSiteInfoResponse
+  'app-meta-loaded': AppMetaResponse
+  "send-message": string
+  "send-message-success": string
+  "send-message-error": string
+  "send-message-loading": boolean
+  "send-message-complete": boolean
+  "send-message-cancel": boolean
+  "send-message-pause": boolean
+  "send-message-resume": boolean
+  "send-message-stop": boolean
+}
+
 
 export interface ApplicationConfig {
   accessMode?: AccessMode
@@ -23,7 +42,7 @@ export interface ApplicationConfig {
   isLoadingToken: boolean
 
   appParams?: AppParamsResponse
-  isLoading: boolean
+  isLoadingAppParams: boolean
 
   siteInfo?: AppSiteInfoResponse
   isLoadingSiteInfo: boolean
@@ -32,6 +51,7 @@ export interface ApplicationConfig {
   metaInfo?: AppMetaResponse
   isLoadingMetaInfo: boolean
 
+  emitter?: Emitter<AppEvents>
 }
 
 export interface AppTokenMap {
@@ -40,12 +60,12 @@ export interface AppTokenMap {
 
 export const ApplicationContext = createContext<ApplicationConfig>({
   isLoadingToken: false,
-  isLoading: true,
+  isLoadingAppParams: true,
   isLoadingAccessMode: true,
   isLoadingSiteInfo: true,
   isLoadingMetaInfo: true,
-})
 
+})
 
 
 
@@ -60,6 +80,12 @@ export interface AppCodeApplication {
 export const ParamsProvider: FC<PropsWithChildren<AppCodeApplication>> = ({ children, ...ops }) => {
   const { appCode, getAccessMode, getAppConfig, getSiteInfo, getMetaInfo } = ops
 
+  const emitter = mitt<AppEvents>()
+  useEffect(() => {
+    return () => {
+      emitter.all.clear()
+    }
+  }, [emitter])
   /**
    * 假设没有传入getAccessMode函数
    * 则需要自行获取访问模式
@@ -117,7 +143,7 @@ export const ParamsProvider: FC<PropsWithChildren<AppCodeApplication>> = ({ chil
    * 注意: 只有在accessMode是public的时候才需要token
    * 否则认为应用是公开的, 可以直接访问
    */
-  const { data: appParams, isLoading } = useQuery<AppParamsResponse>({
+  const { data: appParams, isLoading: isLoadingAppParams } = useQuery<AppParamsResponse>({
     queryKey: ['app-params', appCode, tokens?.[appCode] ?? token],
     enabled: () => !!getAppConfig || !!appCode && !!(tokens?.[appCode] || token),
     queryFn: async () => {
@@ -174,13 +200,15 @@ export const ParamsProvider: FC<PropsWithChildren<AppCodeApplication>> = ({ chil
         isLoadingToken,
 
         appParams,
-        isLoading,
+        isLoadingAppParams,
 
         siteInfo,
         isLoadingSiteInfo,
 
         metaInfo,
-        isLoadingMetaInfo
+        isLoadingMetaInfo,
+
+        emitter
       }}>
       {children}
     </ApplicationContext.Provider>
