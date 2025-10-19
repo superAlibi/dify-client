@@ -3,7 +3,7 @@ import { fetchEventSource, FetchEventSourceInit } from '@microsoft/fetch-event-s
 import { APIS } from '../constans'
 import {
   AccessModeResponse, AccessTokenResponse,
-  AppMetaResponse, AppParamsResponse,
+  AppMetaResponse,
   AppSiteInfoResponse, AudioToTextResponse,
   ConversationHistoryResponse,
   ConversationMessageResponse,
@@ -16,6 +16,7 @@ import {
 } from './types'
 import z from 'zod'
 import { service } from '../tools/http'
+import { AppParamsResponse } from './types/app-params'
 
 
 
@@ -336,6 +337,14 @@ interface SendMessageOptions extends Omit<FetchEventSourceInit, 'fetch' | 'metho
   searchParams: Options['searchParams']
 }
 
+
+/**
+ * 发送消息
+ * 能接收到的 sse data 部分的 event 消息格式请参考types/event-source/index.ts
+ * @see  ./types/event-source/index.ts EventSourceTypes
+ * @param options 
+ * @returns 
+ */
 export const sendMessage = async (options?: SendMessageOptions) => {
   const { ...ops } = options || {}
   return fetchEventSource(APIS.MESSAGE_POST, {
