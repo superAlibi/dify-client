@@ -1,5 +1,5 @@
-import { Options } from 'ky'
 import { fetchEventSource, FetchEventSourceInit } from '@microsoft/fetch-event-source'
+
 import { APIS } from '../constans'
 import {
   AccessModeResponse, AccessTokenResponse,
@@ -15,10 +15,20 @@ import {
   SendMessageParams
 } from './types'
 import z from 'zod'
-import { service } from '../tools/http'
 import { AppParamsResponse } from './types/app-params'
 
+import ky, { type Options } from "ky";
 
+
+
+export let service = ky.create({
+  prefixUrl: '/dify',
+  timeout: 60000,
+})
+
+export const resetService = (options: Options) => {
+  return service = ky.create(options)
+}
 
 /**
  * 给出应用的访问模式
@@ -334,18 +344,18 @@ export const previewFile = (params: z.infer<typeof filePreviewSchema>, options?:
 
 interface SendMessageOptions extends Omit<FetchEventSourceInit, 'fetch' | 'method' | 'body'> {
   json: SendMessageParams
-  searchParams: Options['searchParams']
+  searchParams?: Options['searchParams']
 }
 
 
 /**
  * 发送消息
  * 能接收到的 sse data 部分的 event 消息格式请参考types/event-source/index.ts
- * @see  ./types/event-source/index.ts EventSourceTypes
+ * @see  {@link EventSourceTypes} EventSourceTypes
  * @param options 
  * @returns 
  */
-export const sendMessage = async (options?: SendMessageOptions) => {
+export const sendMessage = async (options: SendMessageOptions) => {
   const { ...ops } = options || {}
   return fetchEventSource(APIS.MESSAGE_POST, {
     ...ops,

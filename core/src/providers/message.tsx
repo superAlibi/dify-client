@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
-import { createContext, FC, PropsWithChildren } from "react"
-import { ConversationMessageMetaItem, getConversationMessages } from "../service-calls"
+import React, { createContext, FC, PropsWithChildren, useState } from "react"
+import { ConversationMessageMetaItem, getConversationMessages, sendMessage } from "../service-calls"
 import { useApplication, useConversationFormSchema } from "../hooks/application"
 import { useListener } from "../hooks/emit"
 
@@ -55,7 +55,9 @@ interface MessageProviderProps {
  * @returns 
  */
 const MessageProviderContent: FC<PropsWithChildren<MessageProviderProps>> = (props) => {
+  const { children, accessToken, conversationId: originalConversationId, user = 'default' } = props
   const formSchema = useConversationFormSchema()
+  const [conversationId, setConversationId] = useState(originalConversationId)
   /**
    * 监听发送消息事件
    * 当用户发送消息时, 会触发发送消息事件
@@ -70,9 +72,27 @@ const MessageProviderContent: FC<PropsWithChildren<MessageProviderProps>> = (pro
       console.error('send-message-error', result?.error)
       return
     }
+    sendMessage({
+      json: {
+        inputs: {},
+        query: ""
+      },
+      onmessage(ev) {
+
+      },
+      async onopen(response) {
+
+      },
+      onerror(err) {
+        console.error('send-message-error', err)
+      },
+      onclose() {
+        console.log('send-message-close')
+      },
+    })
   })
 
-  const { children, accessToken, conversationId, user = 'default' } = props
+
   const { data: messages, isLoading: isLoadingMessages } = useQuery({
     queryKey: ['messages', user, accessToken, conversationId],
     enabled: () => !!accessToken && !!conversationId,

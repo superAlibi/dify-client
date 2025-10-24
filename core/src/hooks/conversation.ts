@@ -1,25 +1,19 @@
 import {
-  getConversationMessages,
   getConversations as getConversationsApi,
-  setConversationTitle,
   getConversationVariables,
-  sendMessageFeedback,
-  type ConversationMessageMetaItem,
-  type ConversationHistoryItem,
-  type ConversationVariableItem,
-  type MessageFeedBackInfo,
-  AppParamsResponse,
-  ConversationsQuerySchema,
-  ConversationHistoryResponse,
-  SortBy,
-  ConversationMessagesQuerySchema,
-  ConversationVariableSchema,
-  SendMessageFeedbackSchema,
-} from '../service-calls'
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
-import { createContext, FC, PropsWithChildren, ReactNode, useState } from 'react'
-import z from 'zod'
 
+  ConversationsQuerySchema,
+  ConversationVariableSchema,
+} from '../service-calls'
+import { useQuery } from '@tanstack/react-query'
+import z from 'zod'
+import { useApplication } from './application'
+
+
+interface UseConversationsProps {
+  searchParams: z.infer<typeof ConversationsQuerySchema>
+  authKey: (accessToken: string) => [string, string]
+}
 
 /**
  * 获取会话历史列表
@@ -27,11 +21,14 @@ import z from 'zod'
  * @param searchParams 
  * @returns 
  */
-export const useConversations = (accessCode: string, searchParams: z.infer<typeof ConversationsQuerySchema>) => {
+export const useConversations = ({ authKey, searchParams }: UseConversationsProps) => {
+  const { accessToken, isLoadingToken } = useApplication()
   const { data: conversations, isLoading: isLoadingConversations } = useQuery({
-    queryKey: ['conversations', accessCode, searchParams],
+    queryKey: ['conversations', searchParams],
+    enabled: () => !!accessToken && !isLoadingToken,
     queryFn: async () => {
-      return getConversationsApi(searchParams, { headers: { Authorization: `Bearer ${accessCode}` } })
+      const [key, value] = authKey(accessToken!)
+      return getConversationsApi(searchParams, { headers: { [key]: value } })
     }
   })
   return { conversations, isLoadingConversations }
