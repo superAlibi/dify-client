@@ -62,8 +62,9 @@ const MessageProviderContent: FC<PropsWithChildren<MessageProviderProps>> = (pro
    * 监听发送消息事件
    * 当用户发送消息时, 会触发发送消息事件
    * 会话消息会自动加载
-   * TODO: 等待完善
+   * 
    */
+  // TODO: 等待完善
   useListener('send-message', (message) => {
     debugger
     console.log('send-message', message)
@@ -97,6 +98,7 @@ const MessageProviderContent: FC<PropsWithChildren<MessageProviderProps>> = (pro
     queryKey: ['messages', user, accessToken, conversationId],
     enabled: () => !!accessToken && !!conversationId,
     queryFn: async () => {
+      // TODO: 参考useConversations的实现, 实现reqOptions
       return getConversationMessages({ conversation_id: conversationId!, user }, { headers: { Authorization: `Bearer ${accessToken}` } })
     }
   })

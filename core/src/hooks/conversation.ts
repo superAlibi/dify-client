@@ -8,11 +8,12 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import z from 'zod'
 import { useApplication } from './application'
+import { Options } from 'ky'
 
 
 interface UseConversationsProps {
   searchParams: z.infer<typeof ConversationsQuerySchema>
-  authKey: (accessToken: string) => [string, string]
+  reqOptions: Options | ((accessToken: string) => Options)
 }
 
 /**
@@ -21,14 +22,14 @@ interface UseConversationsProps {
  * @param searchParams 
  * @returns 
  */
-export const useConversations = ({ authKey, searchParams }: UseConversationsProps) => {
+export const useConversations = ({ reqOptions, searchParams }: UseConversationsProps) => {
   const { accessToken, isLoadingToken } = useApplication()
   const { data: conversations, isLoading: isLoadingConversations } = useQuery({
     queryKey: ['conversations', searchParams],
     enabled: () => !!accessToken && !isLoadingToken,
     queryFn: async () => {
-      const [key, value] = authKey(accessToken!)
-      return getConversationsApi(searchParams, { headers: { [key]: value } })
+      const options = typeof reqOptions === 'function' ? reqOptions(accessToken!) : reqOptions
+      return getConversationsApi(searchParams, options ?? {})
     }
   })
   return { conversations, isLoadingConversations }
@@ -36,17 +37,25 @@ export const useConversations = ({ authKey, searchParams }: UseConversationsProp
 
 
 
+interface UseConversationVariablesProps {
+  searchParams: z.infer<typeof ConversationVariableSchema>
+  reqOptions: Options | ((accessToken: string) => Options)
+}
+
 /**
  * 获取会话变量
  * @param accessCode 
  * @param searchParams 
  * @returns 
  */
-export const useConversationVariables = (accessCode: string, searchParams: z.infer<typeof ConversationVariableSchema>) => {
+export const useConversationVariables = ({ reqOptions, searchParams }: UseConversationVariablesProps) => {
+  const { accessToken, isLoadingToken } = useApplication()
   const { data: variables, isLoading: isLoadingVariables } = useQuery({
-    queryKey: ['variables', accessCode, searchParams],
+    queryKey: ['variables', searchParams],
+    enabled: () => !!accessToken && !isLoadingToken,
     queryFn: async () => {
-      return getConversationVariables(searchParams, { headers: { Authorization: `Bearer ${accessCode}` } })
+      const options = typeof reqOptions === 'function' ? reqOptions(accessToken!) : reqOptions
+      return getConversationVariables(searchParams, options)
     }
   })
   return { variables, isLoadingVariables }

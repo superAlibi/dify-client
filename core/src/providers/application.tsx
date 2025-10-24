@@ -37,6 +37,8 @@ export interface AppEvents extends Record<EventType, any> {
 
 
 export interface ApplicationConfig {
+
+  appCode: string
   accessMode?: AccessMode
   isLoadingAccessMode: boolean
 
@@ -67,6 +69,7 @@ export const ApplicationContext = createContext<ApplicationConfig>({
   isLoadingSiteInfo: true,
   isLoadingMetaInfo: true,
 
+  appCode: '',
 })
 
 
@@ -74,7 +77,6 @@ export const ApplicationContext = createContext<ApplicationConfig>({
 
 export interface ParamsProviderProps {
   appCode: string
-  authKey: (accessToken: string) => [string, string]
   getAccessMode: () => Promise<AccessModeResponse>
   getPassport: () => Promise<string>
   getAppConfig: (accessToken: string) => Promise<AppParamsResponse>
@@ -107,9 +109,7 @@ export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ chi
 
 
 
-  /**
-   * TODO: 找机会改掉这个代码, 太长了, 且无法适应ssr
-   */
+  // TODO: 找机会改掉这个代码, 太长了, 且无法适应ssr
   const [tokens, setTokens] = useLocalStorage<AppTokenMap>('accessToken', localStorage.getItem('accessToken') ? JSON.parse(localStorage.getItem('accessToken')!) : {})
   /**
    * 假设没有传入getAppConfig函数
@@ -123,11 +123,9 @@ export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ chi
       if (tokens?.[appCode]) {
         return tokens?.[appCode]
       }
-      debugger
-      // debugger
-      // const token = await getPassport()
-      // setTokens(produce((prev) => ({ ...prev, [appCode]: token })))
-      // return token
+      const token = await getPassport()
+      setTokens(produce((prev) => ({ ...prev, [appCode]: token })))
+      return token
     }
   })
 
@@ -136,10 +134,9 @@ export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ chi
    * 如果token变化, 则更新tokens到本地存储
    */
   useEffect(() => {
-
     if (!token) {
       const newTokens = Object.fromEntries(Object.entries(tokens || {}).filter(([k]) => k !== appCode))
-      // setTokens(newTokens)
+      setTokens(newTokens)
     } else {
       setTokens(produce((prev) => ({ ...prev, [appCode]: token })))
     }
@@ -203,6 +200,8 @@ export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ chi
   return (
     <ApplicationContext.Provider
       value={{
+
+        appCode,
         accessMode: accessModeData?.accessMode,
         isLoadingAccessMode,
 
@@ -265,11 +264,38 @@ interface AppParamsProviderProps extends IgnoreParamsProviderProps {
    */
   getMetaInfo?: () => Promise<AppMetaResponse>
   /**
+   * @description
+   * ```markdown
    * 给出请求头中的认证key
-   * 需要accessToken
+   * 在接口 parameters, site, meta 中需要使用,并调用此接口,
+   * 本质上,此接口是用来灵活设置 authentication 的
+   * ```
+   * @example
+   * ```tsx
+   * const reqOptions = useCallback((accessToken: string) => ({
+   *   headers: {
+   *     'x-app-code': appCode,
+   *     'x-app-passport': accessToken,
+   *     'Authorization': `Bearer ${accessToken}`,  
+   *   }
+   * }), [appCode])
+   * <AppParamsProvider
+   *   appCode={appCode}
+   *   reqOptions={reqOptions}
+   * >
+   *   <App />
+   * </AppParamsProvider>
+   * ```
    * @returns 
    */
-  authKey?: (accessToken: string) => [string, string]
+  reqOptions?: Options | ((accessToken: string) => Options)
+  /**
+   * 只有在没有传入getPassport时才会调用此函数
+   * 用于在获取到accessToken后进行一些操作
+   * 例如: 保存到本地存储
+   * @param accessToken 
+   */
+  onAccessTokenGet?: (accessToken: string) => void | Promise<void>
 
   serverOptions?: Options | (() => Options)
 }
@@ -284,7 +310,8 @@ export const AppParamsProvider: FC<PropsWithChildren<AppParamsProviderProps>> = 
     getSiteInfo: defaultGetSiteInfo,
     getMetaInfo: defaultGetMetaInfo,
     serverOptions,
-    authKey = (accessToken: string) => ['Authorization', 'Bearer ' + accessToken],
+    onAccessTokenGet,
+    reqOptions,
   } = props
   useEffect(() => {
     if (!serverOptions) return void 0
@@ -299,25 +326,27 @@ export const AppParamsProvider: FC<PropsWithChildren<AppParamsProviderProps>> = 
   }, [defaultGetAccessMode])
   const getPassport = useCallback(async () => {
     if (defaultGetPassport) return defaultGetPassport()
-    return getAppAccessToken(appCode).then(res => res.access_token)
-  }, [defaultGetPassport])
+    return getAppAccessToken(appCode).then(res => {
+      onAccessTokenGet?.(res.access_token)
+      return res.access_token
+    })
+  }, [defaultGetPassport, onAccessTokenGet])
 
   const getAppConfig = useCallback((accessToken: string) => {
     if (defaultGetAppConfig) return defaultGetAppConfig()
-    const [key, value] = authKey(accessToken)
-    return getAppRuntimeParameters({ headers: { [key]: value } })
-  }, [defaultGetAppConfig])
+    const options = typeof reqOptions === 'function' ? reqOptions(accessToken) : reqOptions
+    return getAppRuntimeParameters(options)
+  }, [defaultGetAppConfig, reqOptions])
   const getSiteInfo = useCallback((accessToken: string) => {
     if (defaultGetSiteInfo) return defaultGetSiteInfo()
-    const [key, value] = authKey(accessToken)
-
-    return getAppSiteinfo({ headers: { [key]: value } })
-  }, [defaultGetSiteInfo])
+    const options = typeof reqOptions === 'function' ? reqOptions(accessToken) : reqOptions
+    return getAppSiteinfo(options ?? {})
+  }, [defaultGetSiteInfo, reqOptions])
   const getMetaInfo = useCallback((accessToken: string) => {
     if (defaultGetMetaInfo) return defaultGetMetaInfo()
-    const [key, value] = authKey(accessToken)
-    return getAppMeta({ headers: { [key]: value } })
-  }, [defaultGetMetaInfo])
+    const options = typeof reqOptions === 'function' ? reqOptions(accessToken) : reqOptions
+    return getAppMeta(options ?? {})
+  }, [defaultGetMetaInfo, reqOptions])
 
   return (
     <QueryClientProvider client={qc}>
@@ -325,7 +354,6 @@ export const AppParamsProvider: FC<PropsWithChildren<AppParamsProviderProps>> = 
         appCode={appCode}
         getAccessMode={getAccessMode}
         getPassport={getPassport}
-        authKey={authKey}
         getAppConfig={getAppConfig}
         getSiteInfo={getSiteInfo}
         getMetaInfo={getMetaInfo}
