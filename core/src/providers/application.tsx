@@ -1,4 +1,4 @@
-import React, { createContext, FC, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react'
+import React, { createContext, FC, PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   type AppParamsResponse,
   AccessModeResponse,
@@ -11,29 +11,17 @@ import {
   getAppAccessMode,
   getAppSiteinfo,
   getAppMeta,
+  ConversationHistoryResponse,
 } from '../service-calls'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@reactuses/core'
 import { produce } from 'immer'
 import mitt, { Emitter, EventType } from 'mitt'
 import { Options } from 'ky'
+import { AppEvents } from './types'
 
-export interface AppEvents extends Record<EventType, any> {
-  'app-access-mode-loaded': AccessModeResponse
-  'app-token-loaded': string
-  'app-params-loaded': AppParamsResponse
-  'app-siteinfo-loaded': AppSiteInfoResponse
-  'app-meta-loaded': AppMetaResponse
-  "send-message": string
-  "send-message-success": string
-  "send-message-error": string
-  "send-message-loading": boolean
-  "send-message-complete": boolean
-  "send-message-cancel": boolean
-  "send-message-pause": boolean
-  "send-message-resume": boolean
-  "send-message-stop": boolean
-}
+
+
 
 
 export interface ApplicationConfig {
@@ -55,12 +43,13 @@ export interface ApplicationConfig {
   metaInfo?: AppMetaResponse
   isLoadingMetaInfo: boolean
 
-  emitter?: Emitter<AppEvents>
+  emitter: Emitter<AppEvents>
 }
 
 export interface AppTokenMap {
   [key: string]: string
 }
+const defaultEmitter = mitt<AppEvents>()
 
 export const ApplicationContext = createContext<ApplicationConfig>({
   isLoadingToken: false,
@@ -70,6 +59,7 @@ export const ApplicationContext = createContext<ApplicationConfig>({
   isLoadingMetaInfo: true,
 
   appCode: '',
+  emitter: defaultEmitter,
 })
 
 
@@ -86,12 +76,7 @@ export interface ParamsProviderProps {
 export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ children, ...ops }) => {
   const { appCode, getPassport, getAccessMode, getAppConfig, getSiteInfo, getMetaInfo } = ops
 
-  const emitter = mitt<AppEvents>()
-  useEffect(() => {
-    return () => {
-      emitter.all.clear()
-    }
-  }, [emitter])
+
   /**
    * 假设没有传入getAccessMode函数
    * 则需要自行获取访问模式
@@ -102,7 +87,12 @@ export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ chi
   const { data: accessModeData, isLoading: isLoadingAccessMode } = useQuery({
     queryKey: ['app-access-mode', appCode],
     enabled: () => !!getAccessMode || !!appCode,
-    queryFn: getAccessMode
+    queryFn: async () => {
+      return getAccessMode().then(res => {
+        defaultEmitter.emit('app-access-mode-loaded', res)
+        return res
+      })
+    }
   })
 
 
@@ -123,7 +113,10 @@ export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ chi
       if (tokens?.[appCode]) {
         return tokens?.[appCode]
       }
-      const token = await getPassport()
+      const token = await getPassport().then(res => {
+        defaultEmitter.emit('app-token-loaded', res)
+        return res
+      })
       setTokens(produce((prev) => ({ ...prev, [appCode]: token })))
       return token
     }
@@ -159,7 +152,12 @@ export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ chi
   const { data: appParams, isLoading: isLoadingAppParams } = useQuery<AppParamsResponse>({
     queryKey: ['app-params', appCode, tokens?.[appCode] ?? token],
     enabled: () => !!appCode && (!!(tokens?.[appCode] || token)),
-    queryFn: () => getAppConfig(tokens?.[appCode] ?? token!)
+    queryFn: async () => {
+      return getAppConfig(tokens?.[appCode] ?? token!).then(res => {
+        defaultEmitter.emit('app-params-loaded', res)
+        return res
+      })
+    }
   })
 
 
@@ -179,7 +177,12 @@ export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ chi
   const { data: siteInfo, isLoading: isLoadingSiteInfo } = useQuery({
     queryKey: ['app-siteinfo', appCode, tokens?.[appCode] ?? token],
     enabled: () => !!appCode && !!(tokens?.[appCode] || token),
-    queryFn: () => getSiteInfo(tokens?.[appCode] ?? token!)
+    queryFn: async () => {
+      return getSiteInfo(tokens?.[appCode] ?? token!).then(res => {
+        defaultEmitter.emit('app-siteinfo-loaded', res)
+        return res
+      })
+    }
   })
 
 
@@ -194,7 +197,12 @@ export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ chi
   const { data: metaInfo, isLoading: isLoadingMetaInfo } = useQuery({
     queryKey: ['app-meta', appCode, tokens?.[appCode] ?? token],
     enabled: () => !!appCode && !!(tokens?.[appCode] || token),
-    queryFn: () => getMetaInfo(tokens?.[appCode] ?? token!)
+    queryFn: async () => {
+      return getMetaInfo(tokens?.[appCode] ?? token!).then(res => {
+        defaultEmitter.emit('app-meta-loaded', res)
+        return res
+      })
+    }
   })
 
   return (
@@ -217,7 +225,7 @@ export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ chi
         metaInfo,
         isLoadingMetaInfo,
 
-        emitter
+        emitter: defaultEmitter,
       }}>
       {children}
     </ApplicationContext.Provider>

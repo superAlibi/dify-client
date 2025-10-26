@@ -1,8 +1,7 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
-import React, { createContext, FC, PropsWithChildren, useState } from "react"
-import { ConversationMessageMetaItem, getConversationMessages, sendMessage } from "../service-calls"
+import React, { createContext, FC, PropsWithChildren, useCallback, useEffect, useRef, useState } from "react"
+import { ConversationMessageMetaItem, getConversationMessages, ResponseMode, sendMessage } from "../service-calls"
 import { useApplication, useConversationFormSchema } from "../hooks/application"
-import { useListener } from "../hooks/emit"
 
 interface MessageContextType {
   /**
@@ -42,9 +41,9 @@ const MessageContext = createContext<MessageContextType>({
 
 
 interface MessageProviderProps {
-  accessToken: string
   conversationId?: string
   user?: string
+  reqHeaders: (accessToken: string) => Record<string, string>
 }
 
 
@@ -55,30 +54,43 @@ interface MessageProviderProps {
  * @returns 
  */
 const MessageProviderContent: FC<PropsWithChildren<MessageProviderProps>> = (props) => {
-  const { children, accessToken, conversationId: originalConversationId, user = 'default' } = props
+  const { reqHeaders, children, conversationId: originalConversationId, user = 'default' } = props
   const formSchema = useConversationFormSchema()
   const [conversationId, setConversationId] = useState(originalConversationId)
-  /**
-   * 监听发送消息事件
-   * 当用户发送消息时, 会触发发送消息事件
-   * 会话消息会自动加载
-   * 
-   */
-  // TODO: 等待完善
-  useListener('send-message', (message) => {
-    debugger
-    console.log('send-message', message)
+  const signal = useRef<AbortController>(void 0)
+  const { emitter, accessToken } = useApplication()
+  const sendMessageHandler = useCallback((message: string) => {
+    if (!message) return
     const result = formSchema?.safeParse({})
-    if (!result?.success) {
-      console.error('send-message-error', result?.error)
+    if (result && !result.success) {
+
+
+      console.error('send-message-error', result?.error.issues.map(item => item.message).join(', '))
       return
     }
+
+    if (signal.current) {
+      signal.current.abort()
+    }
+    const newSignal = new AbortController()
+    signal.current = newSignal
     sendMessage({
+
+      signal: newSignal.signal,
       json: {
         inputs: {},
-        query: ""
+        query: message,
+        response_mode: ResponseMode.Streaming
       },
+      headers: reqHeaders(accessToken!),
       onmessage(ev) {
+        if (ev.event) {
+          console.log(ev.event);
+
+        } else {
+
+          console.log(ev.data);
+        }
 
       },
       async onopen(response) {
@@ -89,9 +101,23 @@ const MessageProviderContent: FC<PropsWithChildren<MessageProviderProps>> = (pro
       },
       onclose() {
         console.log('send-message-close')
+
       },
     })
-  })
+  }, [formSchema])
+  /**
+   * 监听发送消息事件
+   * 当用户发送消息时, 会触发发送消息事件
+   * 会话消息会自动加载
+   * 
+   */
+  useEffect(() => {
+    if (!emitter) return
+    emitter?.on('send-message', sendMessageHandler)
+    return () => {
+      emitter?.off('send-message', sendMessageHandler)
+    }
+  }, [emitter])
 
 
   const { data: messages, isLoading: isLoadingMessages } = useQuery({

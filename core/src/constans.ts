@@ -53,17 +53,19 @@ const api_meta = {
 } as const
 
 
-export let defaultPrefixUrl = ''
+export let defaultApiPrefixUrl = ''
 
 /**
  * 默认的 API 对象
  */
-export const APIS = formatApis(defaultPrefixUrl)
+export const APIS = formatApis(defaultApiPrefixUrl)
 
-export const setApiBase = (baseURL: string) => {
-  defaultPrefixUrl = baseURL
-  Object.assign(APIS, formatApis(defaultPrefixUrl))
-  return baseURL
+export const setApiBase = (baseURL: string, resetAPIS: boolean = false) => {
+  defaultApiPrefixUrl = baseURL
+  if (resetAPIS) {
+    return Object.assign(APIS, formatApis(defaultApiPrefixUrl))
+  }
+  return APIS
 }
 
 type FormatCall = (key: string, url: string) => string

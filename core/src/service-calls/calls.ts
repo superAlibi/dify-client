@@ -1,6 +1,6 @@
 import { fetchEventSource, FetchEventSourceInit } from '@microsoft/fetch-event-source'
 
-import { APIS } from '../constans'
+import { APIS, defaultApiPrefixUrl, setApiBase } from '../constans'
 import {
   AccessModeResponse, AccessTokenResponse,
   AppMetaResponse,
@@ -22,12 +22,13 @@ import ky, { type Options } from "ky";
 
 
 export let service = ky.create({
-  prefixUrl: '/dify',
+  retry: 0,
   timeout: 60000,
 })
 
 export const resetService = (options: Options) => {
-  return service = ky.create(options)
+  setApiBase(options.prefixUrl as string, false)
+  return service = ky.create({ ...options, retry: 0, })
 }
 
 /**
@@ -357,10 +358,12 @@ interface SendMessageOptions extends Omit<FetchEventSourceInit, 'fetch' | 'metho
  */
 export const sendMessage = async (options: SendMessageOptions) => {
   const { ...ops } = options || {}
-  return fetchEventSource(APIS.MESSAGE_POST, {
+  return fetchEventSource([defaultApiPrefixUrl, APIS.MESSAGE_POST].join('/'), {
     ...ops,
     method: 'POST',
+
     fetch: service.create({
+      retry: 0,
       timeout: false,
       hooks: {
         beforeRequest: [(req, options) => {

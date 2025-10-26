@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query'
 import z from 'zod'
 import { useApplication } from './application'
 import { Options } from 'ky'
+import { useEffect } from 'react'
 
 
 interface UseConversationsProps {
@@ -23,8 +24,8 @@ interface UseConversationsProps {
  * @returns 
  */
 export const useConversations = ({ reqOptions, searchParams }: UseConversationsProps) => {
-  const { accessToken, isLoadingToken } = useApplication()
-  const { data: conversations, isLoading: isLoadingConversations } = useQuery({
+  const { accessToken, isLoadingToken, emitter } = useApplication()
+  const { data: conversations, refetch, isLoading: isLoadingConversations } = useQuery({
     queryKey: ['conversations', searchParams],
     enabled: () => !!accessToken && !isLoadingToken,
     queryFn: async () => {
@@ -32,7 +33,22 @@ export const useConversations = ({ reqOptions, searchParams }: UseConversationsP
       return getConversationsApi(searchParams, options ?? {})
     }
   })
-  return { conversations, isLoadingConversations }
+  useEffect(() => {
+    if (emitter) {
+      emitter.on('conversations-refresh', () => refetch())
+    }
+    return () => {
+      emitter?.off('conversations-refresh')
+    }
+  }, [emitter])
+
+
+  useEffect(() => {
+    if (emitter && conversations) {
+      emitter.emit('conversations-loaded', conversations)
+    }
+  }, [conversations, emitter])
+  return { conversations, refreshConversations: refetch, isLoadingConversations }
 }
 
 
@@ -50,7 +66,7 @@ interface UseConversationVariablesProps {
  */
 export const useConversationVariables = ({ reqOptions, searchParams }: UseConversationVariablesProps) => {
   const { accessToken, isLoadingToken } = useApplication()
-  const { data: variables, isLoading: isLoadingVariables } = useQuery({
+  const { data: variables, refetch, isLoading: isLoadingVariables } = useQuery({
     queryKey: ['variables', searchParams],
     enabled: () => !!accessToken && !isLoadingToken,
     queryFn: async () => {
@@ -58,5 +74,5 @@ export const useConversationVariables = ({ reqOptions, searchParams }: UseConver
       return getConversationVariables(searchParams, options)
     }
   })
-  return { variables, isLoadingVariables }
+  return { variables, refreshConversationVariables: refetch, isLoadingVariables }
 }
