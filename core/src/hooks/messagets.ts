@@ -3,6 +3,7 @@ import { ConversationMessagesQuerySchema, getConversationMessages, messageFeedba
 import { SendMessageFeedbackSchema } from "../service-calls"
 import { sendMessageFeedback } from "../service-calls"
 import z from "zod"
+import { Options } from "ky"
 
 /**
  * 获取会话消息
@@ -10,11 +11,11 @@ import z from "zod"
  * @param searchParams 
  * @returns 
  */
-export const useConversationMessages = (accessCode: string, searchParams: z.infer<typeof ConversationMessagesQuerySchema>) => {
+export const useConversationMessages = (searchParams: z.infer<typeof ConversationMessagesQuerySchema>, optionis: Options) => {
   const { data: messages, isLoading: isLoadingMessages } = useQuery({
-    queryKey: ['messages', accessCode, searchParams],
+    queryKey: ['messages', optionis, searchParams],
     queryFn: async () => {
-      return getConversationMessages(searchParams, { headers: { Authorization: `Bearer ${accessCode}` } })
+      return getConversationMessages(searchParams, optionis)
     }
   })
   return { messages, isLoadingMessages }
@@ -25,11 +26,11 @@ export const useConversationMessages = (accessCode: string, searchParams: z.infe
  * @param searchParams 
  * @returns 
  */
-export const useessageFeedbacks = (accessCode: string, searchParams: z.infer<typeof MessageFeedbacksSchema>) => {
+export const useessageFeedbacks = (searchParams: z.infer<typeof MessageFeedbacksSchema>, optionis: Options) => {
   const { data: feedback, isLoading: isLoadingFeedback } = useQuery({
-    queryKey: ['feedback', accessCode, searchParams],
+    queryKey: ['feedback', optionis, searchParams],
     queryFn: async () => {
-      return messageFeedbacks(searchParams, { headers: { Authorization: `Bearer ${accessCode}` } })
+      return messageFeedbacks(searchParams, optionis)
     }
   })
   return { feedback, isLoadingFeedback }

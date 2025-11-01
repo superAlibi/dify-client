@@ -1,4 +1,4 @@
-import { AccessModeResponse, AppMetaResponse, AppParamsResponse, AppSiteInfoResponse, ConversationHistoryResponse } from "../service-calls"
+import { AccessModeResponse, AppMetaResponse, AppParamsResponse, AppSiteInfoResponse, ConversationHistoryResponse, ConversationMessageResponse } from "../service-calls"
 
 export type AppEvents = {
   'app-access-mode-loaded': AccessModeResponse
@@ -13,4 +13,5 @@ export type AppEvents = {
 
   "send-message": string
   "message": string
+  "messages-loaded": ConversationMessageResponse
 }

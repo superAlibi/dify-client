@@ -4,15 +4,16 @@ import {
 
   ConversationsQuerySchema,
   ConversationVariableSchema,
+  ConversationHistoryResponse,
 } from '../service-calls'
-import { useQuery } from '@tanstack/react-query'
+import { RefetchOptions, useQuery } from '@tanstack/react-query'
 import z from 'zod'
 import { useApplication } from './application'
 import { Options } from 'ky'
-import { useEffect } from 'react'
+import { createContext, useContext, useEffect } from 'react'
 
 
-interface UseConversationsProps {
+export interface UseConversationsProps {
   searchParams: z.infer<typeof ConversationsQuerySchema>
   reqOptions: Options | ((accessToken: string) => Options)
 }
@@ -75,4 +76,23 @@ export const useConversationVariables = ({ reqOptions, searchParams }: UseConver
     }
   })
   return { variables, refreshConversationVariables: refetch, isLoadingVariables }
+}
+
+
+
+
+export interface ConversationContextType {
+  conversations?: ConversationHistoryResponse
+  refresh: (params: RefetchOptions) => Promise<void>
+  isLoadingConversations: boolean
+}
+export const ConversationContext = createContext<ConversationContextType>({
+  isLoadingConversations: false,
+  refresh: () => Promise.resolve()
+
+})
+
+
+export const useConversation = () => {
+  return useContext(ConversationContext)
 }
