@@ -1,5 +1,5 @@
 
-import { APIS, defaultApiPrefixUrl, setApiBase } from '../constans'
+import { APIS, setApiBase } from '../constans'
 import {
   AccessModeResponse, AccessTokenResponse,
   AppMetaResponse,

@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
 import { ConversationMessagesQuerySchema, getConversationMessages, messageFeedbacks, MessageFeedbacksSchema } from "../service-calls"
-import { SendMessageFeedbackSchema } from "../service-calls"
-import { sendMessageFeedback } from "../service-calls"
 import z from "zod"
 import { Options } from "ky"
 

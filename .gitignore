@@ -12,3 +12,12 @@ storybook-static
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+
+
+
+dist-ssr
+count.txt
+.env
+.nitro
+.tanstack

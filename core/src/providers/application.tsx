@@ -1,4 +1,9 @@
-import React, { createContext, FC, PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  createContext,
+  FC, PropsWithChildren,
+  useCallback, useEffect,
+
+} from 'react'
 import {
   type AppParamsResponse,
   AccessModeResponse,
@@ -11,7 +16,6 @@ import {
   getAppAccessMode,
   getAppSiteinfo,
   getAppMeta,
-  ConversationHistoryResponse,
 } from '../service-calls'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { useLocalStorage } from '@reactuses/core'
@@ -24,7 +28,7 @@ import { AppEvents } from './types'
 
 
 
-export interface ApplicationConfig {
+export interface ApplicationConfigContextType {
 
   appCode: string
   accessMode?: AccessMode
@@ -51,7 +55,7 @@ export interface AppTokenMap {
 }
 const defaultEmitter = mitt<AppEvents>()
 
-export const ApplicationContext = createContext<ApplicationConfig>({
+export const ApplicationContext = createContext<ApplicationConfigContextType>({
   isLoadingToken: false,
   isLoadingAppParams: true,
   isLoadingAccessMode: true,

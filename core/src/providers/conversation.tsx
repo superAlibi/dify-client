@@ -10,7 +10,7 @@ export interface ConversationProviderProps {
   reqOptions: Options | ((accessToken: string) => Options)
 }
 
-const ConversationProvider: FC<PropsWithChildren<ConversationProviderProps>> = ({ children, ...ops }) => {
+const ConversationProviderContent: FC<PropsWithChildren<ConversationProviderProps>> = ({ children, ...ops }) => {
   const { searchParams, reqOptions } = ops
   const { conversations, refreshConversations, isLoadingConversations } = useConversations({ searchParams, reqOptions })
   const refresh = useCallback(async (options?: RefetchOptions) => {
@@ -22,10 +22,10 @@ const ConversationProvider: FC<PropsWithChildren<ConversationProviderProps>> = (
 }
 
 const qc = new QueryClient()
-export const ConversationProviderWrapper: FC<PropsWithChildren<ConversationProviderProps>> = ({ children, ...ops }) => {
+export const ConversationProvider: FC<PropsWithChildren<ConversationProviderProps>> = ({ children, ...ops }) => {
   return <QueryClientProvider client={qc}>
-    <ConversationProvider {...ops}>
+    <ConversationProviderContent {...ops}>
       {children}
-    </ConversationProvider>
+    </ConversationProviderContent>
   </QueryClientProvider>
 }

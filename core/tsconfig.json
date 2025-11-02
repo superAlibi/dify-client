@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
-    "lib": ["DOM", "ES2022"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "module": "ESNext",
     "jsx": "react-jsx",
     "strict": true,
@@ -10,5 +13,7 @@
     "moduleResolution": "bundler",
     "useDefineForClassFields": true
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }
