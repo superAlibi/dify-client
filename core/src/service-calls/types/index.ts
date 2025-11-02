@@ -187,12 +187,23 @@ export interface ConversationMessageMetaItem {
    * 创建时间
    */
   created_at?: number;
+  /**
+   * 消息反馈信息
+   * 
+   */
   feedback?: Feedback;
   /**
    * 消息 ID。
    */
   id?: string;
+  /**
+   * 用户询问问题时的输入参数
+   */
   inputs?: ServerConversationFormInputs;
+  /**
+   * 消息发送时附带的文件信息
+   * 消息文件
+   */
   message_files?: MessageFile[];
   /**
    * 用户输入/提问内容。
@@ -202,11 +213,20 @@ export interface ConversationMessageMetaItem {
 }
 
 export interface Feedback {
+  /**
+   * 反馈类型
+   */
   rating: Rating;
 }
 
 export enum Rating {
+  /**
+   * 不喜欢
+   */
   Dislike = "dislike",
+  /**
+   * 喜欢
+   */
   Like = "like",
 }
 
@@ -284,14 +304,19 @@ export interface MessageFile {
    * 预览图片地址。
    */
   url?: string;
-  [property: string]: any;
 }
 
 /**
  * 文件归属方。
  */
 export enum BelongsTo {
+  /**
+   * 助手
+   */
   Assistant = "assistant ",
+  /**
+   * 用户
+   */
   User = "user",
 }
 
@@ -597,7 +622,13 @@ export interface SendMessageParams {
    */
   inputs: PostConversationFormInputs;
   /**
-   * 上次会话中某对话分支的消息id
+   * 
+   * ```markdown
+   * 作用有2:
+   * 1. 上次会话中某对话分支的消息id,比如不以最新的消息id为父消息,则表示这条消息的分支消息
+   * 2. 如果不传,则表示是新会话的第一条消息,如果后续发送消息时,不传此参数,则表示这条消息是新会话的第一条消息,直接导致第一条消息有很多个分支
+   * 
+   * ```
    */
   parent_message_id?: string;
   /**

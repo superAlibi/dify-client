@@ -1,4 +1,3 @@
-import { fetchEventSource, FetchEventSourceInit } from '@microsoft/fetch-event-source'
 
 import { APIS, defaultApiPrefixUrl, setApiBase } from '../constans'
 import {
@@ -343,9 +342,9 @@ export const previewFile = (params: z.infer<typeof filePreviewSchema>, options?:
 }
 
 
-interface SendMessageOptions extends Omit<FetchEventSourceInit, 'fetch' | 'method' | 'body'> {
+interface SendMessageOptions extends Omit<Options, 'fetch' | 'method' | 'body' | 'retry' | 'timeout'> {
   json: SendMessageParams
-  searchParams?: Options['searchParams']
+  searchParams?: Record<string, string>
 }
 
 
@@ -358,20 +357,13 @@ interface SendMessageOptions extends Omit<FetchEventSourceInit, 'fetch' | 'metho
  */
 export const sendMessage = async (options: SendMessageOptions) => {
   const { ...ops } = options || {}
-  return fetchEventSource([defaultApiPrefixUrl, APIS.MESSAGE_POST].join('/'), {
-    ...ops,
-    method: 'POST',
 
-    fetch: service.create({
-      retry: 0,
-      timeout: false,
-      hooks: {
-        beforeRequest: [(req, options) => {
-          console.log(req.body, options);
-          return
-        }]
-      }
-    })
+
+
+  return service.post(APIS.MESSAGE_POST, {
+    ...ops,
+    retry: 0,
+    timeout: false,
   })
 }
 

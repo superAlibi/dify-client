@@ -76,8 +76,22 @@ export interface Metadata {
   /**
    * 引用和归属分段列表。
    */
-  retriever_resources: string;
-  usage: { [key: string]: any };
+  retriever_resources: string[];
+  annotation_reply: any
+  usage: {
+    prompt_tokens: number,
+    prompt_unit_price: string,
+    prompt_price_unit: string,
+    prompt_price: string,
+    completion_tokens: number,
+    completion_unit_price: string,
+    completion_price_unit: string,
+    completion_price: string,
+    total_tokens: number,
+    total_price: string,
+    currency: string,
+    latency: number
+  };
   [property: string]: any;
 }
 

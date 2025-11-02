@@ -1,9 +1,13 @@
-import { FileResponse } from "../base"
+import { Interface } from "readline"
+import { EventSourceBase, FileResponse } from "../base"
 
 export type WorkflowFinishedResponse = {
+  event: 'workflow_started',
+  conversation_id: string,
+  message_id: string,
+  created_at: number,
   task_id: string
   workflow_run_id: string
-  event: 'workflow_finished',
   data: {
     id: string
     workflow_id: string
@@ -22,6 +26,7 @@ export type WorkflowFinishedResponse = {
     finished_at: number
     files?: FileResponse[]
   }
+
 }
 
 
