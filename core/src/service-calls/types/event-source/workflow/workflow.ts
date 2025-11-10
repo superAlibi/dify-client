@@ -1,5 +1,4 @@
-import { Interface } from "readline"
-import { EventSourceBase, FileResponse } from "../base"
+import { FileResponse } from "../base"
 
 export type WorkflowFinishedResponse = {
   event: 'workflow_started',

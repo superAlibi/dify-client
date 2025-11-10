@@ -1,29 +1,76 @@
 # dify 客户端工具
 
 
-## 客户端react providers
+## 本包导出的reactProvider
 
-### AppParamsProvider|ParamsProviderProps
+### AppParamsProvider|ParamsProvider
 
 提供应用的全局配置
-1. 表单配置
-2. 应用文件信息限制
-3. 自动请求passport(token|auth)
-4. meta信息
-5. site信息
+1. 自动请求token
+2. 表单配置
+3. 应用文件信息限制
+4. 自动请求passport(token|auth)
+5. meta信息
+6. site信息
+
+
+
+```mermaid
+graph LR
+
+
+```
 
 ### ConversationProvider
 
-提供会话相关信息
+在AppParamsProvider完成token获取后, 会自动发起会话相关信息
+
+1. 会话历史
+2. 上一次智能体的会话id
+3. 表单功能(TODO: 未完成)
+
+```mermaid
+graph LR
+
+
+```
 
 
 ### MessageProvider
 
 最复杂的组件, 提供消息相关处理逻辑和信息
 
+1. 负责监听消息发送事件,同时将获得表单schema(zod),验证表单是否完整
+2. 发送消息,并监听sse流,同时解析文本并储存文本信息
+3. 触发sse对应的时间类型到事件总线
+4. 监听中断sse事件, 并立即中断sse流, 而不管dify消息流是否正常终止响应任务
+
+```mermaid
+graph LR
 
 
-## 请求小工具
+```
+
+
+
+
+### Provider联系和层级
+
+dify总体上由`AppParamsProvider`提供token, 和应用配置, 然后将token和参数提供给 `ConversationProvider`, 由`ConversationProvider`提供会话管理或切换功能, 毕竟每一个消息都是属于一轮会话的,
+
+毕竟ai如果丢失了会话就跟丢失了上下文, 你之前说过的什么全都忘记了.
+
+因此, 其信息传递流程如下
+
+
+```mermaid
+graph TD
+    P([ConversationProvider])--->|token&会话上下文表单配置&智能体配置|C[/ConversationProvider/]--->|绘画历史列表及其表单输入管理|M(消息列表获得&消息发送&消息展示)
+```
+
+总体来说,以上信息流传递中可以替换任意一个提供环节. 以提供自定义的功能
+
+## 本包导出的工具函数
 
 包含客户端请求需要的接口
 

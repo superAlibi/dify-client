@@ -2,7 +2,7 @@ import { QueryInput } from '@/components/query-input'
 import ReactMarkdown from 'react-markdown'
 import { createFileRoute } from '@tanstack/react-router'
 import { ConversationMessageContext, MessageProvider, useApplication } from 'dify-client'
-import { useContext } from 'react'
+import { useContext, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 export const Route = createFileRoute('/(chat)/chat/$conversationId')({
   component: RouteComponent
@@ -11,6 +11,14 @@ export const Route = createFileRoute('/(chat)/chat/$conversationId')({
 
 function ChatPage() {
   const { emitter } = useApplication()
+  useEffect(() => {
+    emitter.on('message-end', (message) => {
+      console.log(message)
+    })
+    return () => {
+      emitter.off('message-end')
+    }
+  }, [emitter])
   const { messages, messageInitialLoading } = useContext(ConversationMessageContext)
   return <div className='@container  h-screen w-full p-4'>
     {messageInitialLoading ? <Loader2 className='w-4 h-4 animate-spin text-gray-500' /> : null}

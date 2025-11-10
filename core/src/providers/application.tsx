@@ -22,11 +22,11 @@ import { useLocalStorage } from '@reactuses/core'
 import { produce } from 'immer'
 import mitt, { Emitter, EventType } from 'mitt'
 import { Options } from 'ky'
-import { AppEvents } from './types'
+import { EventSourceMap, ProviderEventMap } from './types'
 
 
 
-
+type AppEvents = EventSourceMap & ProviderEventMap
 
 export interface ApplicationConfigContextType {
 
@@ -77,6 +77,13 @@ export interface ParamsProviderProps {
   getSiteInfo: (accessToken: string) => Promise<AppSiteInfoResponse>
   getMetaInfo: (accessToken: string) => Promise<AppMetaResponse>
 }
+
+/**
+ * 允许用户自定义请求的提供者
+ * 例如: 使用fetch代替ky
+ * @param param0
+ * @returns 
+ */
 export const ParamsProvider: FC<PropsWithChildren<ParamsProviderProps>> = ({ children, ...ops }) => {
   const { appCode, getPassport, getAccessMode, getAppConfig, getSiteInfo, getMetaInfo } = ops
 

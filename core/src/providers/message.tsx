@@ -6,6 +6,7 @@ import { HTTPError, Options } from "ky"
 import { EventSourceParserStream } from 'eventsource-parser/stream'
 import { EventSourceMessage } from "eventsource-parser"
 import { produce } from "immer"
+import { EventSourceDataTypes } from "./types"
 // import { useFetchEventSource } from '@reactuses/core'
 interface MessageContextType {
   /**
@@ -199,61 +200,51 @@ const MessageProviderContent: FC<PropsWithChildren<MessageProviderProps>> = (pro
    * @returns void
    */
   const eventSourceDataHandler = useCallback((postInfo: SendMessageParams, eventSourceData?: EventSourceBase) => {
-    if (!eventSourceData) {
-      // 更新消息列表,并且预存一个空消息,用于后期消息流结束时, 更新消息列表
-      setMessages(prev => [...prev, {
-        id: tempMessageId.current,
-        query: postInfo.query,
-      }])
-      return
-    }
-
-
-    /**
-     * 重复部分代码,用于更新消息列表
-     * @param messageItem 
-     */
     function updateMessages(messageItem: Message) {
-      // 使用函数式更新,确保访问到最新的 messages 状态
       emitter.emit('message', messageItem)
-      setMessages(prev => {
-        // 优先找到于 messageItem.id 的节点, 因为找到了,那么多半就已经是在react中更新过消息信息了, 否则就是第一次更新
-
-        const voidMessageIndex = prev.findIndex(item => item.id === messageItem.id || item.id === tempMessageId.current)
-        console.assert(voidMessageIndex !== -1, '未找到预存空消息节点')
-
-        return produce(prev, draft => {
-          const currentMessage = draft[voidMessageIndex]
-          draft.splice(voidMessageIndex, 1, {
-            query: postInfo.query,
-            id: messageItem.id,
-            answer: [currentMessage.answer, messageItem.answer].filter(Boolean).join(''),
-          })
+      setMessages((draft => {
+        const findMessageIndex = draft.findIndex(item => item.id === messageItem.id || item.id === tempMessageId.current)
+        console.assert(findMessageIndex !== -1, '未找到预存空消息节点')
+        const currentMessage = draft.at(findMessageIndex)
+        draft.splice(findMessageIndex, 1, {
+          query: postInfo.query,
+          id: messageItem.id,
+          answer: [currentMessage?.answer, messageItem.answer].filter(Boolean).join(''),
         })
-      })
+        return [...draft]
+      }))
     }
     switch (eventSourceData?.event) {
       case 'message': {
-        const messageItem = eventSourceData as Message
-        updateMessages(messageItem)
+        updateMessages(eventSourceData as Message)
         break
       }
       case 'agent_message': {
-        const agentMessage = eventSourceData as Message
-        updateMessages(agentMessage)
+        updateMessages(eventSourceData as Message)
         break
       }
       case 'message_end': {
+
         emitter.emit('message-end', eventSourceData as MessageEnd)
         // const messageEnd = eventSourceData as MessageEnd
-        // 更新临时消息id,为下一次新的消息做准备
-        tempMessageId.current = crypto.randomUUID()
+        // 使用 setMessages 确保状态更新完成后再重置临时消息id
+        // 这样可以保证 tempMessageId.current 的更新与 setMessages 的执行顺序一致
+        setMessages((draft) => {
+          // 在这个函数内部，我们确保所有之前的 setMessages 都已经执行完毕
+          // 此时才安全地更新 tempMessageId
+          tempMessageId.current = crypto.randomUUID()
+          // 返回不变的状态，因为我们只是想利用这个回调的执行时机
+          return draft
+        })
         break
       }
-      default:
+      default: {
+        const eventSourceDataItem = eventSourceData as EventSourceDataTypes
+        emitter.emit(eventSourceDataItem.event, eventSourceDataItem)
         // TODO: 需要其他本组件不关注的sse,并通过emitter触发
         // console.debug('未知事件', eventSourceData)
         break
+      }
     }
   }, [emitter])
 
@@ -296,7 +287,12 @@ const MessageProviderContent: FC<PropsWithChildren<MessageProviderProps>> = (pro
     /**
      * 更新一下消息列表, 预存一个空消息,用于后期消息流结束时, 更新消息列表
      */
-    eventSourceDataHandler(postInfo)
+    setMessages(prev => [...prev, {
+      id: tempMessageId.current,
+      query: postInfo.query,
+    }])
+    console.log(tempMessageId.current, 'sendMessage', postInfo, structuredClone(messages));
+
 
     // 发送消息
     sendMessage({
@@ -328,6 +324,7 @@ const MessageProviderContent: FC<PropsWithChildren<MessageProviderProps>> = (pro
               default: {
                 // 解析消息, 消息一般为json,但是返回的json信息需要参考/src/service-calls/types/event-source/index.ts中的接口定义, 进行解析
                 const eventSourceData = JSON.parse(e.data)
+
                 eventSourceDataHandler(postInfo, eventSourceData)
               }
             }
