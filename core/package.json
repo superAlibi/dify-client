@@ -1,8 +1,8 @@
 {
-  "name": "dify-chat-client",
+  "name": "dify-terminal",
   "version": "0.1.0",
   "type": "module",
-  "description": "dify chat client",
+  "description": "dify chat web terminal utils package",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
