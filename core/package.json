@@ -1,5 +1,5 @@
 {
-  "name": "dify-terminal",
+  "name": "@jimok/dify-terminal",
   "version": "1.0.0-alpha.1",
   "type": "module",
   "description": "dify chat web terminal utils package",
