@@ -43,8 +43,23 @@ jobs:
         id: tag_version
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "version=${TAG_NAME#v}" >> $GITHUB_OUTPUT
+          VERSION=${TAG_NAME#v}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "tag=${TAG_NAME}" >> $GITHUB_OUTPUT
+          # Check if version contains "alpha", "beta", or "rc" for npm tag
+          if [[ "$VERSION" == *"alpha"* ]]; then
+            echo "npm_tag=alpha" >> $GITHUB_OUTPUT
+            echo "📦 Detected alpha version, will publish with --tag alpha"
+          elif [[ "$VERSION" == *"beta"* ]]; then
+            echo "npm_tag=beta" >> $GITHUB_OUTPUT
+            echo "📦 Detected beta version, will publish with --tag beta"
+          elif [[ "$VERSION" == *"rc"* ]]; then
+            echo "npm_tag=rc" >> $GITHUB_OUTPUT
+            echo "📦 Detected rc version, will publish with --tag rc"
+          else
+            echo "npm_tag=latest" >> $GITHUB_OUTPUT
+            echo "📦 Detected stable version, will publish to latest"
+          fi
 
       - name: Verify version matches package.json
         run: |
@@ -59,7 +74,14 @@ jobs:
       - name: Publish to npm
         run: |
           cd core
-          pnpm publish --access public --no-git-checks
+          NPM_TAG="${{ steps.tag_version.outputs.npm_tag }}"
+          if [ "$NPM_TAG" = "latest" ]; then
+            echo "🚀 Publishing to npm with tag: latest"
+            pnpm publish --access public --no-git-checks
+          else
+            echo "🚀 Publishing to npm with tag: $NPM_TAG"
+            pnpm publish --access public --no-git-checks --tag "$NPM_TAG"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

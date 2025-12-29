@@ -90,10 +90,23 @@ echo "Tag $TAG created and pushed successfully"
 
 - **格式**: `v<version>`
 - **示例**: 
-  - `v1.0.0` - 正式版本
-  - `v1.0.0-alpha.1` - Alpha 版本
-  - `v1.0.0-beta.1` - Beta 版本
-  - `v1.0.0-rc.1` - 候选版本
+  - `v1.0.0` - 正式版本（发布到 npm `latest` 标签）
+  - `v1.0.0-alpha.1` - Alpha 版本（发布到 npm `alpha` 标签）
+  - `v1.0.0-beta.1` - Beta 版本（发布到 npm `beta` 标签）
+  - `v1.0.0-rc.1` - 候选版本（发布到 npm `rc` 标签）
+
+### NPM Tag 自动分配
+
+GitHub Actions workflow 会根据 tag 中的版本标识自动分配 npm 标签：
+
+- **包含 `alpha`** → 发布到 `alpha` 标签
+  - 安装: `pnpm add dify-terminal@alpha` 或 `pnpm add dify-terminal@1.0.0-alpha.1`
+- **包含 `beta`** → 发布到 `beta` 标签
+  - 安装: `pnpm add dify-terminal@beta` 或 `pnpm add dify-terminal@1.0.0-beta.1`
+- **包含 `rc`** → 发布到 `rc` 标签
+  - 安装: `pnpm add dify-terminal@rc` 或 `pnpm add dify-terminal@1.0.0-rc.1`
+- **稳定版本** → 发布到 `latest` 标签（默认）
+  - 安装: `pnpm add dify-terminal` 或 `pnpm add dify-terminal@latest`
 
 ## ⚠️ 重要注意事项
 
@@ -111,7 +124,19 @@ echo "Tag $TAG created and pushed successfully"
 3. ✅ 构建核心包
 4. ✅ 运行测试
 5. ✅ 验证版本号匹配
-6. ✅ 发布到 npm
+6. ✅ 检测版本类型（alpha/beta/rc/stable）
+7. ✅ 发布到 npm（自动使用对应的 npm tag）
+
+### NPM Tag 自动分配逻辑
+
+Workflow 会根据 tag 版本自动选择 npm 发布标签：
+
+- `v1.0.0-alpha.*` → `pnpm publish --tag alpha`
+- `v1.0.0-beta.*` → `pnpm publish --tag beta`
+- `v1.0.0-rc.*` → `pnpm publish --tag rc`
+- `v1.0.0` → `pnpm publish`（默认 latest 标签）
+
+这样可以让用户通过不同的标签安装不同稳定性的版本。
 
 ## 🐛 常见问题
 
