@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 
 import { Link } from '@tanstack/react-router'
-import { AppParamsProvider, ConversationProvider, useApplication, useConversation, useConversations } from 'dify-client'
+import { AppParamsProvider, ConversationProvider, useApplication, useConversation, useConversations } from 'dify-terminal'
 
 import { ClipboardType, Loader, MessagesSquare, Plus, } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'

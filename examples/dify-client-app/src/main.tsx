@@ -9,7 +9,7 @@ import { routeTree } from './routeTree.gen'
 
 import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
-import { resetService } from 'dify-client'
+import { resetService } from 'dify-terminal'
 resetService({
   prefixUrl: '/dify',
 })

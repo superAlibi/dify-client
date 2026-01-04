@@ -1,7 +1,7 @@
 import { QueryInput } from '@/components/query-input'
 import ReactMarkdown from 'react-markdown'
 import { createFileRoute } from '@tanstack/react-router'
-import { ConversationMessageContext, MessageProvider, useApplication } from 'dify-client'
+import { ConversationMessageContext, MessageProvider, useApplication } from 'dify-terminal'
 import { useContext, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 export const Route = createFileRoute('/(chat)/chat/$conversationId')({

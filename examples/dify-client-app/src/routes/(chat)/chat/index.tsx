@@ -1,6 +1,6 @@
 import { QueryInput } from '@/components/query-input'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ConversationMessageContext, MessageProvider, useApplication } from 'dify-client'
+import { ConversationMessageContext, MessageProvider, useApplication } from 'dify-terminal'
 import { Loader2 } from 'lucide-react'
 import { useContext, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'

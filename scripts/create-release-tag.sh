@@ -80,5 +80,5 @@ echo "✅ Success! Tag $TAG has been created and pushed."
 echo "📦 GitHub Actions will automatically publish the package to npm."
 echo ""
 echo "You can view the release at:"
-echo "  https://github.com/superAlibi/dify-client/releases/tag/$TAG"
+echo "  https://github.com/superAlibi/dify-terminal/releases/tag/$TAG"
 

@@ -100,7 +100,7 @@ function ChatComponent() {
 这是一个使用 pnpm workspace 的 monorepo 项目：
 
 ```
-dify-client/
+dify-terminal/
 ├── core/              # 核心库包 (dify-terminal)
 │   ├── src/          # 源代码
 │   └── dist/         # 构建输出

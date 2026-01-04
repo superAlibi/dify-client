@@ -48,7 +48,7 @@ git push origin --tags
 ### 方法 2: 使用 GitHub Web 界面
 
 1. 访问 GitHub 仓库页面
-2. 点击右侧的 "Releases" 或直接访问 `https://github.com/your-username/dify-client/releases`
+2. 点击右侧的 "Releases" 或直接访问 `https://github.com/your-username/dify-terminal/releases`
 3. 点击 "Create a new release"
 4. 选择或创建新的 tag（格式：`v1.0.0-alpha.2`）
 5. 填写 Release 标题和描述

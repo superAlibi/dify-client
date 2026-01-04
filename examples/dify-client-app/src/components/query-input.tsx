@@ -2,7 +2,7 @@ import { useEffect, useRef, type FC } from "react"
 import { Input } from "./ui/input"
 import { Button } from "./ui/button"
 import { Send } from "lucide-react"
-import { useApplication } from "dify-client"
+import { useApplication } from "dify-terminal"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 

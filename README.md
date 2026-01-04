@@ -100,7 +100,7 @@ For detailed API documentation, please refer to the [core package README](./core
 This is a monorepo project using pnpm workspace:
 
 ```
-dify-client/
+dify-terminal/
 ├── core/              # Core library package (dify-terminal)
 │   ├── src/          # Source code
 │   └── dist/         # Build output
@@ -164,5 +164,5 @@ If you have any questions or suggestions, please contact us through Issues.
 ## 🔗 Links
 
 - [Dify Official Website](https://dify.ai/)
-- [GitHub Repository](https://github.com/superAlibi/dify-client)
+- [GitHub Repository](https://github.com/superAlibi/dify-terminal)
 
