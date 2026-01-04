@@ -12,13 +12,13 @@
   ],
   "author": "superAlibi",
   "license": "MIT",
-  "homepage": "https://github.com/superAlibi/dify-client",
+  "homepage": "https://github.com/superAlibi/dify-terminal",
   "bugs": {
-    "url": "https://github.com/superAlibi/dify-client/issues"
+    "url": "https://github.com/superAlibi/dify-terminal/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/superAlibi/dify-client"
+    "url": "https://github.com/superAlibi/dify-terminal"
   },
   "exports": {
     ".": {
